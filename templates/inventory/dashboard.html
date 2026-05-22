@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load money %}
+{% block title %}Dashboard | Fynnet Inventory{% endblock %}
+{% block content %}
+<div class="mb-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="grid gap-4 p-5 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.16em] text-sky-700">Daily Control</p>
+            <h2 class="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl">Dashboard</h2>
+            <p class="mt-1 text-sm text-slate-500">{{ selected_date }} business snapshot</p>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
+            <form class="flex items-center gap-2" method="get">
+                <input class="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200" type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}">
+                <button class="inline-flex items-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800" type="submit">
+                    <i data-lucide="calendar-days" class="h-4 w-4"></i> View
+                </button>
+            </form>
+            <a class="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50" href="{% url 'reports' %}">
+                <i data-lucide="chart-line" class="h-4 w-4"></i> History
+            </a>
+            <a class="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50" href="{% url 'export_xlsx' %}?start_date={{ selected_date|date:'Y-m-d' }}&end_date={{ selected_date|date:'Y-m-d' }}">
+                <i data-lucide="file-spreadsheet" class="h-4 w-4"></i> Export
+            </a>
+            <a class="inline-flex items-center justify-center gap-2 rounded-md bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800" href="{% url 'sale_create' %}">
+                <i data-lucide="plus" class="h-4 w-4"></i> Sale
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="rounded-lg border border-slate-200 border-t-sky-500 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500">Daily Sales</p>
+            <span class="grid h-9 w-9 place-items-center rounded-md bg-sky-50 text-sky-700"><i data-lucide="trending-up" class="h-4 w-4"></i></span>
+        </div>
+        <p class="mt-4 text-3xl font-bold text-slate-950">Rs {{ sales_total|money }}</p>
+    </div>
+    <div class="rounded-lg border border-slate-200 border-t-rose-500 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500">Daily Expenses</p>
+            <span class="grid h-9 w-9 place-items-center rounded-md bg-rose-50 text-rose-700"><i data-lucide="circle-dollar-sign" class="h-4 w-4"></i></span>
+        </div>
+        <p class="mt-4 text-3xl font-bold text-slate-950">Rs {{ expenses_total|money }}</p>
+    </div>
+    <div class="rounded-lg border border-slate-200 border-t-emerald-500 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500">Net Profit</p>
+            <span class="grid h-9 w-9 place-items-center rounded-md bg-emerald-50 text-emerald-700"><i data-lucide="badge-dollar-sign" class="h-4 w-4"></i></span>
+        </div>
+        <p class="mt-4 text-3xl font-bold text-slate-950">Rs {{ net_profit|money }}</p>
+    </div>
+    <div class="rounded-lg border border-slate-200 border-t-amber-500 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500">Remaining Balance</p>
+            <span class="grid h-9 w-9 place-items-center rounded-md bg-amber-50 text-amber-700"><i data-lucide="banknote" class="h-4 w-4"></i></span>
+        </div>
+        <p class="mt-4 text-3xl font-bold text-slate-950">Rs {{ remaining_balance|money }}</p>
+    </div>
+</div>
+
+<div class="mt-6 grid gap-4 lg:grid-cols-3">
+    <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Cash Received</p>
+        <p class="mt-2 text-xl font-bold">Rs {{ cash_received|money }}</p>
+    </div>
+    <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Gross Profit</p>
+        <p class="mt-2 text-xl font-bold">Rs {{ gross_profit|money }}</p>
+    </div>
+    <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Inventory Value</p>
+        <p class="mt-2 text-xl font-bold">Rs {{ inventory_value|money }}</p>
+    </div>
+</div>
+
+<div class="mt-8 grid gap-6 xl:grid-cols-2">
+    <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 px-4 py-3"><h3 class="font-semibold text-slate-950">2-Month Sales History</h3></div>
+        <div class="max-h-96 overflow-y-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="sticky top-0 bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                    <tr><th class="px-4 py-3">Date</th><th class="px-4 py-3 text-right">Sales</th><th class="px-4 py-3 text-right">Profit</th><th class="px-4 py-3 text-right">Expenses</th></tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for day in sales_history reversed %}
+                        <tr{% if day.date == selected_date %} class="bg-sky-50"{% endif %}>
+                            <td class="px-4 py-3">{{ day.date|date:"M d, D" }}</td>
+                            <td class="px-4 py-3 text-right">Rs {{ day.sales_total|money }}</td>
+                            <td class="px-4 py-3 text-right">Rs {{ day.gross_profit|money }}</td>
+                            <td class="px-4 py-3 text-right">Rs {{ day.expenses_total|money }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+            <h3 class="font-semibold text-slate-950">Recent Sales</h3>
+            <a class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50" href="{% url 'sale_list' %}">
+                <i data-lucide="list" class="h-4 w-4"></i> All
+            </a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                    <tr><th class="px-4 py-3">Invoice</th><th class="px-4 py-3">Date</th><th class="px-4 py-3 text-right">Total</th><th class="px-4 py-3">Status</th></tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for sale in recent_sales %}
+                        <tr>
+                            <td class="px-4 py-3"><a class="font-medium text-sky-700 hover:underline" href="{% url 'sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
+                            <td class="px-4 py-3">{{ sale.sale_date }}</td>
+                            <td class="px-4 py-3 text-right">Rs {{ sale.total_amount|money }}</td>
+                            <td class="px-4 py-3">{{ sale.get_status_display }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td class="px-4 py-6 text-slate-500" colspan="4">No sales yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<div class="mt-6 rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="flex items-center justify-between border-b border-slate-200 px-4 py-3">
+        <h3 class="font-semibold text-slate-950">Low Stock</h3>
+        <a class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50" href="{% url 'stock_adjustment_create' %}">
+            <i data-lucide="plus" class="h-4 w-4"></i> Adjust
+        </a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                <tr><th class="px-4 py-3">Product</th><th class="px-4 py-3">SKU</th><th class="px-4 py-3 text-right">Stock</th><th class="px-4 py-3 text-right">Alert</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for product in low_stock_products %}
+                    <tr>
+                        <td class="px-4 py-3 font-medium">{{ product.name }}</td>
+                        <td class="px-4 py-3">{{ product.sku|default:"-" }}</td>
+                        <td class="px-4 py-3 text-right">{{ product.stock_quantity }}</td>
+                        <td class="px-4 py-3 text-right">{{ product.low_stock_threshold }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td class="px-4 py-6 text-slate-500" colspan="4">Stock levels are clear.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

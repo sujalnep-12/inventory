@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% load money %}
+{% block title %}Sales | Fynnet Inventory{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-950">Sales</h2>
+        <p class="text-sm text-slate-500">{{ sales|length }} invoices</p>
+    </div>
+    <a class="inline-flex items-center justify-center gap-2 rounded-md bg-sky-700 px-3 py-2 text-sm font-semibold text-white hover:bg-sky-800" href="{% url 'sale_create' %}">
+        <i data-lucide="plus" class="h-4 w-4"></i> Sale
+    </a>
+</div>
+<form class="mb-4 grid gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-[180px_180px_auto]" method="get">
+    <input class="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200" type="date" name="start" value="{{ start|date:'Y-m-d' }}">
+    <input class="rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-200" type="date" name="end" value="{{ end|date:'Y-m-d' }}">
+    <button class="inline-flex items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white hover:bg-slate-800" type="submit">
+        <i data-lucide="filter" class="h-4 w-4"></i> Filter
+    </button>
+</form>
+<div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                <tr><th class="px-4 py-3">Invoice</th><th class="px-4 py-3">Date</th><th class="px-4 py-3">Customer</th><th class="px-4 py-3">Payment</th><th class="px-4 py-3 text-right">Total</th><th class="px-4 py-3 text-right">Profit</th><th class="px-4 py-3">Status</th><th class="px-4 py-3"></th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for sale in sales %}
+                    <tr>
+                        <td class="px-4 py-3"><a class="font-medium text-sky-700 hover:underline" href="{% url 'sale_detail' sale.pk %}">{{ sale.invoice_number }}</a></td>
+                        <td class="px-4 py-3">{{ sale.sale_date }}</td>
+                        <td class="px-4 py-3">{{ sale.customer_name|default:"Walk-in" }}</td>
+                        <td class="px-4 py-3">{{ sale.get_payment_method_display }}</td>
+                        <td class="px-4 py-3 text-right">Rs {{ sale.total_amount|money }}</td>
+                        <td class="px-4 py-3 text-right">Rs {{ sale.gross_profit|money }}</td>
+                        <td class="px-4 py-3">{{ sale.get_status_display }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <a class="inline-flex items-center gap-2 rounded-md border border-rose-300 px-3 py-2 font-semibold text-rose-700 hover:bg-rose-50" href="{% url 'sale_delete' sale.pk %}">
+                                <i data-lucide="trash-2" class="h-4 w-4"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td class="px-4 py-8 text-slate-500" colspan="8">No sales found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

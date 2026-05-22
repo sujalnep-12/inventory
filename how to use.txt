@@ -1,0 +1,49 @@
+First-Time Setup
+
+Go to Categories
+Add categories like:
+
+Product: Laptop, Printer, Accessories, Parts
+Service: Repair, Installation, Software, Maintenance
+Expense: Rent, Salary, Transport, Internet, Purchase
+Go to Products
+Add every item you sell:
+
+Product name
+SKU if you have one
+Cost price
+Selling price
+Current stock quantity
+Low stock alert number
+Go to Services
+Add services you provide:
+
+Service name
+Standard price
+Delivery cost, meaning your internal cost
+Duration if useful
+Daily Use
+
+When you sell something, go to New Sale
+
+Select customer name if needed
+Add product or service line items
+Quantity and price will calculate the total
+If the customer paid fully, leave Amount paid blank
+If partial payment, enter the paid amount
+Product stock will reduce automatically after saving the sale.
+
+When you spend money, go to Expenses
+Add expenses like rent, tea, transport, internet, salary, product purchase, etc.
+
+When you buy or correct stock, go to Stock
+Use:
+
+Restock when adding new stock
+Remove stock for damaged/lost items
+Set stock level when correcting count
+Checking Business Records
+
+Dashboard shows daily sales, expenses, profit, remaining balance, cash received, and low stock.
+Reports lets you choose a date range.
+Click Export XLSX to download your Excel report.

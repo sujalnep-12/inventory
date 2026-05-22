@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load money %}
+{% block title %}{{ sale.invoice_number }} | Fynnet Inventory{% endblock %}
+{% block content %}
+<style>
+    @media print {
+        @page {
+            size: 80mm auto;
+            margin: 4mm;
+        }
+
+        body {
+            background: #fff !important;
+        }
+
+        body * {
+            visibility: hidden !important;
+        }
+
+        #receipt-print,
+        #receipt-print * {
+            visibility: visible !important;
+        }
+
+        #receipt-print {
+            position: absolute !important;
+            inset: 0 auto auto 0 !important;
+            width: 72mm !important;
+            margin: 0 !important;
+            border: 0 !important;
+            box-shadow: none !important;
+            color: #000 !important;
+            font-size: 11px !important;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+    }
+</style>
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+        <h2 class="text-2xl font-bold text-slate-950">{{ sale.invoice_number }}</h2>
+        <p class="text-sm text-slate-500">{{ sale.sale_date }} | {{ sale.customer_name|default:"Walk-in" }}</p>
+    </div>
+    <div class="flex flex-wrap gap-2 no-print">
+        <button id="print-bill" class="inline-flex items-center gap-2 rounded-md bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800" type="button">
+            <i data-lucide="printer" class="h-4 w-4"></i> Print Bill
+        </button>
+        <a class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" href="{% url 'sale_create' %}">
+            <i data-lucide="plus" class="h-4 w-4"></i> New Sale
+        </a>
+        <a class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" href="{% url 'sale_list' %}">
+            <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+        </a>
+        <a class="inline-flex items-center gap-2 rounded-md border border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50" href="{% url 'sale_delete' sale.pk %}">
+            <i data-lucide="trash-2" class="h-4 w-4"></i> Delete
+        </a>
+    </div>
+</div>
+<div class="grid gap-4 md:grid-cols-4">
+    <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><p class="text-sm text-slate-500">Total</p><p class="mt-2 text-xl font-bold">Rs {{ sale.total_amount|money }}</p></div>
+    <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><p class="text-sm text-slate-500">Paid</p><p class="mt-2 text-xl font-bold">Rs {{ sale.amount_paid|money }}</p></div>
+    <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><p class="text-sm text-slate-500">Balance Due</p><p class="mt-2 text-xl font-bold">Rs {{ sale.balance_due|money }}</p></div>
+    <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"><p class="text-sm text-slate-500">Gross Profit</p><p class="mt-2 text-xl font-bold">Rs {{ sale.gross_profit|money }}</p></div>
+</div>
+<section class="mt-6 rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="border-b border-slate-200 px-4 py-3">
+        <h3 class="font-semibold text-slate-950">Items</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                <tr><th class="px-4 py-3">Type</th><th class="px-4 py-3">Description</th><th class="px-4 py-3 text-right">Qty</th><th class="px-4 py-3 text-right">Unit</th><th class="px-4 py-3 text-right">Total</th></tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for item in sale.items.all %}
+                    <tr>
+                        <td class="px-4 py-3">{{ item.get_item_type_display }}</td>
+                        <td class="px-4 py-3 font-medium">{{ item.description }}</td>
+                        <td class="px-4 py-3 text-right">{{ item.quantity }}</td>
+                        <td class="px-4 py-3 text-right">Rs {{ item.unit_price|money }}</td>
+                        <td class="px-4 py-3 text-right">Rs {{ item.line_total|money }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="grid gap-2 border-t border-slate-200 px-4 py-4 text-sm md:ml-auto md:w-80">
+        <div class="flex justify-between"><span>Subtotal</span><span>Rs {{ sale.subtotal|money }}</span></div>
+        <div class="flex justify-between"><span>Discount</span><span>Rs {{ sale.discount_amount|money }}</span></div>
+        <div class="flex justify-between text-base font-bold"><span>Total</span><span>Rs {{ sale.total_amount|money }}</span></div>
+    </div>
+</section>
+<section id="receipt-print" class="mx-auto mt-6 w-full max-w-[320px] rounded-lg border border-slate-200 bg-white p-4 font-mono text-[12px] leading-5 text-slate-950 shadow-sm">
+    <div class="text-center">
+        <p class="text-sm font-bold uppercase tracking-wide">Fynnet Computer</p>
+        <p>Computer & Digital Services</p>
+        <p class="mt-1 text-[11px]">Sales Bill</p>
+    </div>
+    <div class="my-3 border-y border-dashed border-slate-400 py-2">
+        <div class="flex justify-between gap-3"><span>Bill</span><span>{{ sale.invoice_number }}</span></div>
+        <div class="flex justify-between gap-3"><span>Date</span><span>{{ sale.sale_date }}</span></div>
+        <div class="flex justify-between gap-3"><span>Customer</span><span>{{ sale.customer_name|default:"Walk-in" }}</span></div>
+        {% if sale.customer_phone %}
+            <div class="flex justify-between gap-3"><span>Phone</span><span>{{ sale.customer_phone }}</span></div>
+        {% endif %}
+        <div class="flex justify-between gap-3"><span>Payment</span><span>{{ sale.get_payment_method_display }}</span></div>
+    </div>
+    <table class="w-full text-left">
+        <thead>
+            <tr class="border-b border-dashed border-slate-400">
+                <th class="py-1 font-bold">Item</th>
+                <th class="py-1 text-right font-bold">Qty</th>
+                <th class="py-1 text-right font-bold">Amt</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in sale.items.all %}
+                <tr>
+                    <td class="py-1 pr-2">{{ item.description }}</td>
+                    <td class="py-1 text-right">{{ item.quantity }}</td>
+                    <td class="py-1 text-right">{{ item.line_total|money }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="mt-2 border-t border-dashed border-slate-400 pt-2">
+        <div class="flex justify-between"><span>Subtotal</span><span>Rs {{ sale.subtotal|money }}</span></div>
+        <div class="flex justify-between"><span>Discount</span><span>Rs {{ sale.discount_amount|money }}</span></div>
+        <div class="mt-1 flex justify-between text-sm font-bold"><span>Total</span><span>Rs {{ sale.total_amount|money }}</span></div>
+        <div class="flex justify-between"><span>Paid</span><span>Rs {{ sale.amount_paid|money }}</span></div>
+        <div class="flex justify-between"><span>Balance</span><span>Rs {{ sale.balance_due|money }}</span></div>
+    </div>
+    <p class="mt-3 border-t border-dashed border-slate-400 pt-2 text-center">Thank you</p>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.getElementById('print-bill')?.addEventListener('click', () => window.print());
+
+    if (new URLSearchParams(window.location.search).get('print') === '1') {
+        window.setTimeout(() => window.print(), 450);
+    }
+</script>
+{% endblock %}

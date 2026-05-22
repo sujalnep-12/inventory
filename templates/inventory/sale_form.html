@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}New Sale | Fynnet Inventory{% endblock %}
+{% block content %}
+<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.16em] text-sky-700">Fast Invoice</p>
+        <h2 class="mt-1 text-2xl font-bold text-slate-950">New Sale</h2>
+    </div>
+    <a class="inline-flex w-fit items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50" href="{% url 'sale_list' %}">
+        <i data-lucide="arrow-left" class="h-4 w-4"></i> Back
+    </a>
+</div>
+<form class="space-y-5" method="post">
+    {% csrf_token %}
+    <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="border-b border-slate-200 bg-slate-50/70 px-5 py-3">
+            <h3 class="font-semibold text-slate-950">Customer & Payment</h3>
+        </div>
+        <div class="p-5">
+        {% include "inventory/_form_errors.html" %}
+        <div class="grid gap-4 md:grid-cols-4">
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700" for="{{ form.sale_date.id_for_label }}">{{ form.sale_date.label }}</label>
+                <div class="grid grid-cols-[44px_1fr_44px] gap-2">
+                    <button class="date-step inline-flex items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-200" type="button" data-date-step="-1" aria-label="Previous day">
+                        <i data-lucide="chevron-left" class="h-4 w-4"></i>
+                    </button>
+                    {{ form.sale_date }}
+                    <button class="date-step inline-flex items-center justify-center rounded-md border border-slate-300 bg-white text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-200" type="button" data-date-step="1" aria-label="Next day">
+                        <i data-lucide="chevron-right" class="h-4 w-4"></i>
+                    </button>
+                </div>
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                    <button class="date-preset rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-200" type="button" data-date-offset="-1">Yesterday</button>
+                    <button class="date-preset rounded-md bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-200" type="button" data-date-offset="0">Today</button>
+                    <button class="date-preset rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-200" type="button" data-date-offset="1">Tomorrow</button>
+                </div>
+                {% for error in form.sale_date.errors %}
+                    <p class="mt-1 text-xs font-medium text-rose-600">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% include "inventory/_field.html" with field=form.customer_name %}
+            {% include "inventory/_field.html" with field=form.customer_phone %}
+            <div>
+                {% include "inventory/_field.html" with field=form.payment_method %}
+                <div class="mt-2 grid grid-cols-3 gap-2">
+                    <button class="payment-preset inline-flex items-center justify-center gap-2 rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800" type="button" data-payment-method="cash">
+                        <i data-lucide="banknote" class="h-4 w-4"></i> Cash
+                    </button>
+                    <button class="payment-preset inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800" type="button" data-payment-method="qr">
+                        <i data-lucide="qr-code" class="h-4 w-4"></i> QR
+                    </button>
+                    <button class="payment-preset inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-400 hover:bg-slate-50" type="button" data-payment-method="credit">
+                        <i data-lucide="clock" class="h-4 w-4"></i> Credit
+                    </button>
+                </div>
+            </div>
+            {% include "inventory/_field.html" with field=form.discount_amount %}
+            {% include "inventory/_field.html" with field=form.amount_paid %}
+            <div class="md:col-span-3">
+                {% include "inventory/_field.html" with field=form.notes %}
+            </div>
+        </div>
+        </div>
+    </section>
+    <section class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-col gap-2 border-b border-slate-200 bg-slate-50/70 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h3 class="font-semibold text-slate-950">Line Items</h3>
+            </div>
+            <button id="add-line" class="inline-flex w-fit items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-300 hover:bg-sky-50 hover:text-sky-800" type="button">
+                <i data-lucide="plus" class="h-4 w-4"></i> Add line
+            </button>
+        </div>
+        <div class="space-y-3 p-5">
+            {{ formset.management_form }}
+            {% for line_form in formset %}
+                <div class="sale-line rounded-lg border border-slate-200 bg-white p-4 shadow-sm {% if not request.POST and not forloop.first %}hidden{% endif %}" data-line-index="{{ forloop.counter0 }}">
+                    {% if line_form.non_field_errors %}
+                        <div class="mb-3 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">{{ line_form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                        <span class="grid h-6 w-6 place-items-center rounded-md bg-slate-100 text-slate-700">{{ forloop.counter }}</span>
+                        Sale line
+                    </div>
+                    <div class="grid gap-3 md:grid-cols-6">
+                        <div>{% include "inventory/_field.html" with field=line_form.item_type %}</div>
+                        <div class="product-cell">{% include "inventory/_field.html" with field=line_form.product %}</div>
+                        <div class="service-cell">{% include "inventory/_field.html" with field=line_form.service %}</div>
+                        <div>{% include "inventory/_field.html" with field=line_form.quantity %}</div>
+                        <div>{% include "inventory/_field.html" with field=line_form.unit_price %}</div>
+                        <div>{% include "inventory/_field.html" with field=line_form.description %}</div>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-3 text-xs font-medium text-slate-500">
+                        <span class="stock-hint"></span>
+                        <span class="shrink-0 rounded-md bg-slate-50 px-3 py-1 text-slate-700">Line Rs <span class="line-total">0</span></span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    <div class="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white/95 p-4 shadow-lg shadow-slate-200/70 backdrop-blur sm:sticky sm:bottom-4 sm:z-10 sm:flex-row sm:items-center sm:justify-between">
+        <div class="text-sm text-slate-600">
+            Preview total: <span class="ml-1 text-xl font-bold text-slate-950">Rs <span id="preview-total">0</span></span>
+        </div>
+        <button class="inline-flex items-center justify-center gap-2 rounded-md bg-sky-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800" type="submit">
+            <i data-lucide="printer" class="h-4 w-4"></i> Save & Print
+        </button>
+    </div>
+</form>
+{{ products_json|json_script:"product-data" }}
+{{ services_json|json_script:"service-data" }}
+{% endblock %}
+{% block scripts %}
+<script>
+    const products = Object.fromEntries(JSON.parse(document.getElementById('product-data').textContent).map((item) => [String(item.id), item]));
+    const services = Object.fromEntries(JSON.parse(document.getElementById('service-data').textContent).map((item) => [String(item.id), item]));
+
+    function money(value) {
+        const numeric = Number(value || 0);
+        return numeric.toFixed(2).replace(/\.?0+$/, '');
+    }
+
+    function refreshRow(row) {
+        const type = row.querySelector('[name$="-item_type"]');
+        const productCell = row.querySelector('.product-cell');
+        const serviceCell = row.querySelector('.service-cell');
+        const product = row.querySelector('[name$="-product"]');
+        const service = row.querySelector('[name$="-service"]');
+        const description = row.querySelector('[name$="-description"]');
+        const unitPrice = row.querySelector('[name$="-unit_price"]');
+        const stockHint = row.querySelector('.stock-hint');
+
+        productCell.classList.toggle('hidden', type.value !== 'product');
+        serviceCell.classList.toggle('hidden', type.value !== 'service');
+
+        if (type.value === 'product' && products[product.value]) {
+            const item = products[product.value];
+            const autofillKey = `product-${item.id}`;
+            if (!unitPrice.value || (unitPrice.dataset.autofilledFor && unitPrice.dataset.autofilledFor !== 'manual' && unitPrice.dataset.autofilledFor !== autofillKey)) {
+                unitPrice.value = item.price;
+                unitPrice.dataset.autofilledFor = autofillKey;
+            }
+            if (!description.value || (description.dataset.autofilledFor && description.dataset.autofilledFor !== 'manual' && description.dataset.autofilledFor !== autofillKey)) {
+                description.value = item.name;
+                description.dataset.autofilledFor = autofillKey;
+            }
+            stockHint.textContent = `Stock ${item.stock}`;
+        }
+        else if (type.value === 'service' && services[service.value]) {
+            const item = services[service.value];
+            const autofillKey = `service-${item.id}`;
+            if (!unitPrice.value || (unitPrice.dataset.autofilledFor && unitPrice.dataset.autofilledFor !== 'manual' && unitPrice.dataset.autofilledFor !== autofillKey)) {
+                unitPrice.value = item.price;
+                unitPrice.dataset.autofilledFor = autofillKey;
+            }
+            if (!description.value || (description.dataset.autofilledFor && description.dataset.autofilledFor !== 'manual' && description.dataset.autofilledFor !== autofillKey)) {
+                description.value = item.name;
+                description.dataset.autofilledFor = autofillKey;
+            }
+            stockHint.textContent = '';
+        }
+        else {
+            stockHint.textContent = '';
+        }
+        refreshTotal();
+    }
+
+    function refreshTotal() {
+        let total = 0;
+        document.querySelectorAll('.sale-line').forEach((row) => {
+            const quantity = Number(row.querySelector('[name$="-quantity"]').value || 0);
+            const price = Number(row.querySelector('[name$="-unit_price"]').value || 0);
+            const lineTotal = quantity * price;
+            total += lineTotal;
+            row.querySelector('.line-total').textContent = money(lineTotal);
+        });
+        const discount = Number(document.querySelector('[name="discount_amount"]').value || 0);
+        document.getElementById('preview-total').textContent = money(Math.max(total - discount, 0));
+    }
+
+    document.querySelectorAll('.sale-line').forEach((row) => {
+        const type = row.querySelector('[name$="-item_type"]');
+        const product = row.querySelector('[name$="-product"]');
+        const service = row.querySelector('[name$="-service"]');
+        const unitPrice = row.querySelector('[name$="-unit_price"]');
+        const quantity = row.querySelector('[name$="-quantity"]');
+        const description = row.querySelector('[name$="-description"]');
+
+        [type, product, service].forEach((input) => input.addEventListener('change', () => refreshRow(row)));
+        [quantity, unitPrice].forEach((input) => input.addEventListener('input', () => {
+            if (input === unitPrice) {
+                unitPrice.dataset.autofilledFor = 'manual';
+            }
+            refreshTotal();
+        }));
+        description.addEventListener('input', () => {
+            description.dataset.autofilledFor = 'manual';
+            refreshTotal();
+        });
+        refreshRow(row);
+    });
+    document.querySelector('[name="discount_amount"]').addEventListener('input', refreshTotal);
+
+    const paymentMethod = document.querySelector('[name="payment_method"]');
+
+    function refreshPaymentButtons() {
+        document.querySelectorAll('.payment-preset').forEach((button) => {
+            const selected = button.dataset.paymentMethod === paymentMethod.value;
+            button.classList.toggle('bg-slate-900', selected);
+            button.classList.toggle('text-white', selected);
+            button.classList.toggle('border', !selected);
+            button.classList.toggle('border-slate-300', !selected);
+            button.classList.toggle('bg-white', !selected);
+            button.classList.toggle('text-slate-700', !selected);
+        });
+    }
+
+    document.querySelectorAll('.payment-preset').forEach((button) => {
+        button.addEventListener('click', () => {
+            paymentMethod.value = button.dataset.paymentMethod;
+            refreshPaymentButtons();
+        });
+    });
+    paymentMethod.addEventListener('change', refreshPaymentButtons);
+
+    document.getElementById('add-line').addEventListener('click', () => {
+        const nextLine = Array.from(document.querySelectorAll('.sale-line.hidden')).at(0);
+        if (nextLine) {
+            nextLine.classList.remove('hidden');
+            nextLine.querySelector('select, input')?.focus();
+        }
+    });
+
+    const saleDateInput = document.querySelector('[name="sale_date"]');
+
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function parseDate(value) {
+        if (!value) {
+            return new Date();
+        }
+        const [year, month, day] = value.split('-').map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    function setSaleDate(date) {
+        saleDateInput.value = formatDate(date);
+        saleDateInput.classList.add('ring-2', 'ring-sky-200', 'border-sky-500');
+        window.setTimeout(() => {
+            saleDateInput.classList.remove('ring-2', 'ring-sky-200', 'border-sky-500');
+        }, 220);
+    }
+
+    document.querySelectorAll('.date-step').forEach((button) => {
+        button.addEventListener('click', () => {
+            const date = parseDate(saleDateInput.value);
+            date.setDate(date.getDate() + Number(button.dataset.dateStep));
+            setSaleDate(date);
+        });
+    });
+
+    document.querySelectorAll('.date-preset').forEach((button) => {
+        button.addEventListener('click', () => {
+            const date = new Date();
+            date.setDate(date.getDate() + Number(button.dataset.dateOffset));
+            setSaleDate(date);
+        });
+    });
+
+    refreshTotal();
+    refreshPaymentButtons();
+</script>
+{% endblock %}
