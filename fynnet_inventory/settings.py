@@ -43,6 +43,12 @@ ALLOWED_HOSTS = env_list(
     '127.0.0.1,localhost,sujalnepaligaire.com.np,www.sujalnepaligaire.com.np',
 )
 
+FORCE_SCRIPT_NAME = '/app'
+
+STATIC_URL = '/app/static/'
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 CSRF_TRUSTED_ORIGINS = env_list(
     'DJANGO_CSRF_TRUSTED_ORIGINS',
     'https://sujalnepaligaire.com.np,https://www.sujalnepaligaire.com.np',
