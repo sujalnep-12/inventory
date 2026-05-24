@@ -4,8 +4,9 @@
 {% block content %}
 <style>
     @media print {
+        /* Target A6 portrait: 105mm × 148.5mm */
         @page {
-            size: 80mm auto;
+            size: 105mm 148.5mm;
             margin: 4mm;
         }
 
@@ -23,14 +24,20 @@
         }
 
         #receipt-print {
+            /* Center the receipt on the A6 page and size it to the page */
             position: absolute !important;
-            inset: 0 auto auto 0 !important;
-            width: 72mm !important;
-            margin: 0 !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 105mm !important;
+            height: 148.5mm !important;
+            margin: auto !important;
             border: 0 !important;
             box-shadow: none !important;
             color: #000 !important;
             font-size: 11px !important;
+            overflow: hidden !important;
         }
 
         .no-print {
