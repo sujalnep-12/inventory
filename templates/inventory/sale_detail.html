@@ -94,6 +94,9 @@
         <button id="print-thermal" class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" type="button">
             <i data-lucide="printer" class="h-4 w-4"></i> Print (Thermal)
         </button>
+        <button id="print-force" class="inline-flex items-center gap-2 rounded-md border border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-50" type="button">
+            <i data-lucide="alert-circle" class="h-4 w-4"></i> Print Single Page
+        </button>
         <a class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" href="{% url 'sale_create' %}">
             <i data-lucide="plus" class="h-4 w-4"></i> New Sale
         </a>
@@ -317,6 +320,24 @@ document.getElementById('print-thermal')?.addEventListener('click', () => {
 // Remove thermal class after printing
 window.addEventListener('afterprint', () => {
     document.body.classList.remove('thermal-print');
+    document.body.classList.remove('very-condensed');
+    // restore any transform/styles
+    restorePrintScale();
+});
+
+// Force single page: aggressive scale + very-condensed class for stubborn printers/browsers
+document.getElementById('print-force')?.addEventListener('click', () => {
+    const receipt = document.getElementById('receipt-print');
+    document.body.classList.add('thermal-print', 'very-condensed');
+    if (receipt) {
+        receipt.style.transformOrigin = 'top left';
+        // apply a strong forced scale; tweak if your printer still overflows
+        receipt.style.transform = 'scale(0.78)';
+    }
+    // small delay to allow styles to apply
+    setTimeout(() => {
+        window.print();
+    }, 150);
 });
 </script>
 {% endblock %}
