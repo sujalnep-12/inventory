@@ -150,4 +150,83 @@
         window.setTimeout(() => window.print(), 450);
     }
 </script>
+<script>
+// Auto-detect CSS DPI and scale receipt to fit target physical size (105mm x 148.5mm)
+function measureCssDpi() {
+    const div = document.createElement('div');
+    div.style.width = '1in';
+    div.style.height = '1in';
+    div.style.position = 'absolute';
+    div.style.left = '-100%';
+    document.body.appendChild(div);
+    const dpi = div.offsetWidth || window.devicePixelRatio * 96;
+    document.body.removeChild(div);
+    return dpi;
+}
+
+function mmToPx(mm, dpi) {
+    return (mm / 25.4) * dpi;
+}
+
+function preparePrintScale() {
+    const receipt = document.getElementById('receipt-print');
+    if (!receipt) return;
+
+    // Desired physical size in mm
+    const targetWidthMm = 105;
+    const targetHeightMm = 148.5;
+
+    const dpi = measureCssDpi();
+
+    // target size in CSS pixels at detected DPI
+    const targetPxW = mmToPx(targetWidthMm, dpi);
+    const targetPxH = mmToPx(targetHeightMm, dpi);
+
+    // measured content size
+    const contentW = receipt.scrollWidth;
+    const contentH = receipt.scrollHeight;
+
+    // compute scale to fit both width and height
+    const scaleW = targetPxW / contentW;
+    const scaleH = targetPxH / contentH;
+    const scale = Math.min(scaleW, scaleH, 1);
+
+    // store original styles to restore later
+    receipt.dataset._origTransform = receipt.style.transform || '';
+    receipt.dataset._origTransformOrigin = receipt.style.transformOrigin || '';
+    receipt.style.transformOrigin = 'top left';
+    receipt.style.transform = `scale(${scale})`;
+
+    // adjust page margins visually by reducing padding if scaled
+    receipt.dataset._origPadding = receipt.style.padding || '';
+    // keep overflow hidden for print
+    receipt.style.overflow = 'hidden';
+
+    return scale;
+}
+
+function restorePrintScale() {
+    const receipt = document.getElementById('receipt-print');
+    if (!receipt) return;
+    receipt.style.transform = receipt.dataset._origTransform || '';
+    receipt.style.transformOrigin = receipt.dataset._origTransformOrigin || '';
+    receipt.style.padding = receipt.dataset._origPadding || '';
+    receipt.style.overflow = '';
+}
+
+// Hook into beforeprint/afterprint to apply and restore scaling
+if (window.matchMedia) {
+    const mediaQueryList = window.matchMedia('print');
+    mediaQueryList.addEventListener('change', (mql) => {
+        if (mql.matches) {
+            preparePrintScale();
+        } else {
+            restorePrintScale();
+        }
+    });
+}
+
+window.addEventListener('beforeprint', () => preparePrintScale());
+window.addEventListener('afterprint', () => restorePrintScale());
+</script>
 {% endblock %}
