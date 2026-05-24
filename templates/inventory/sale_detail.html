@@ -70,6 +70,12 @@
         .thermal-print #receipt-print table td {
             padding: 2px 6px !important;
         }
+        /* Very condensed fallback for stubborn printers/browsers */
+        .very-condensed {
+            font-size: 8px !important;
+            line-height: 1.02 !important;
+        }
+        .very-condensed table th, .very-condensed table td { padding: 1px 4px !important; }
 
         .no-print {
             display: none !important;
@@ -213,8 +219,10 @@ function mmToPx(mm, dpi) {
         const dpi = measureCssDpi();
 
         // target size in CSS pixels at detected DPI
+        // subtract an estimated header/footer area (in mm) to account for browser-added headers
+        const headerFooterEstimateMm = 12; // total top+bottom reserved space
         const targetPxW = mmToPx(targetWidthMm, dpi);
-        const targetPxH = mmToPx(targetHeightMm, dpi);
+        const targetPxH = mmToPx(targetHeightMm - headerFooterEstimateMm, dpi);
 
         // measured content size (untransformed)
         const contentW = receipt.scrollWidth || receipt.offsetWidth;
@@ -231,10 +239,11 @@ function mmToPx(mm, dpi) {
         receipt.style.transformOrigin = 'top left';
 
         // Iteratively reduce scale slightly until content fits within target height
-        // This guards against browser header/footer margins and rounding differences
-        const MIN_SCALE = 0.5;
+        // This guards against browser header/footer margins and rounding differences.
+        const MIN_SCALE = 0.45;
         let attempts = 0;
-        while (attempts < 8) {
+        let condensedApplied = false;
+        while (attempts < 12) {
             receipt.style.transform = `scale(${scale})`;
             // get bounding box after transform
             const rect = receipt.getBoundingClientRect();
@@ -244,8 +253,22 @@ function mmToPx(mm, dpi) {
             if (scaledW <= targetPxW + 1 && scaledH <= targetPxH + 1) {
                 break;
             }
+            // If we've tried several times, apply a 'very-condensed' class to reduce font/padding
+            if (attempts === 4 && !condensedApplied) {
+                receipt.classList.add('very-condensed');
+                condensedApplied = true;
+                // re-measure content size after condensed styles
+                const newContentW = receipt.scrollWidth || receipt.offsetWidth;
+                const newContentH = receipt.scrollHeight || receipt.offsetHeight;
+                // recalc scale based on new content
+                const newScaleW = targetPxW / newContentW;
+                const newScaleH = targetPxH / newContentH;
+                scale = Math.min(newScaleW, newScaleH, scale);
+                attempts += 1;
+                continue;
+            }
             // Otherwise reduce scale a bit and retry
-            scale = scale * 0.94;
+            scale = scale * 0.92;
             if (scale < MIN_SCALE) { scale = MIN_SCALE; break; }
             attempts += 1;
         }
