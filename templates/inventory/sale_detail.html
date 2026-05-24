@@ -10,6 +10,15 @@
             margin: 4mm;
         }
 
+        /* Ensure the viewport for printing matches the physical page */
+        html, body {
+            width: 105mm !important;
+            height: 148.5mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+        }
+
         body {
             background: #fff !important;
         }
@@ -38,6 +47,16 @@
             color: #000 !important;
             font-size: 11px !important;
             overflow: hidden !important;
+        }
+
+        /* Prevent the receipt content from breaking across pages */
+        #receipt-print, #receipt-print * {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            -webkit-print-color-adjust: exact !important;
+            box-sizing: border-box !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
         }
 
         .no-print {
