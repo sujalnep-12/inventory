@@ -7,7 +7,8 @@
         /* Target A6 portrait: 105mm × 148.5mm */
         @page {
             size: 105mm 148.5mm;
-            margin: 4mm;
+            /* keep zero page margin to avoid browser header/footer collisions; receipt uses internal padding */
+            margin: 0mm;
         }
 
         /* Ensure the viewport for printing matches the physical page */
@@ -59,6 +60,17 @@
             max-height: 100% !important;
         }
 
+        /* Condensed thermal print mode */
+        .thermal-print #receipt-print {
+            font-size: 9px !important;
+            padding: 6px !important;
+            line-height: 1.05 !important;
+        }
+        .thermal-print #receipt-print table th,
+        .thermal-print #receipt-print table td {
+            padding: 2px 6px !important;
+        }
+
         .no-print {
             display: none !important;
         }
@@ -72,6 +84,9 @@
     <div class="flex flex-wrap gap-2 no-print">
         <button id="print-bill" class="inline-flex items-center gap-2 rounded-md bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-800" type="button">
             <i data-lucide="printer" class="h-4 w-4"></i> Print Bill
+        </button>
+        <button id="print-thermal" class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" type="button">
+            <i data-lucide="printer" class="h-4 w-4"></i> Print (Thermal)
         </button>
         <a class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50" href="{% url 'sale_create' %}">
             <i data-lucide="plus" class="h-4 w-4"></i> New Sale
@@ -187,7 +202,7 @@ function mmToPx(mm, dpi) {
     return (mm / 25.4) * dpi;
 }
 
-function preparePrintScale() {
+    function preparePrintScale() {
     const receipt = document.getElementById('receipt-print');
     if (!receipt) return;
 
@@ -208,7 +223,10 @@ function preparePrintScale() {
     // compute scale to fit both width and height
     const scaleW = targetPxW / contentW;
     const scaleH = targetPxH / contentH;
-    const scale = Math.min(scaleW, scaleH, 1);
+    // Apply a small safety multiplier to ensure content doesn't spill to a second page
+    const rawScale = Math.min(scaleW, scaleH, 1);
+    const safetyMultiplier = 0.96;
+    const scale = rawScale * safetyMultiplier;
 
     // store original styles to restore later
     receipt.dataset._origTransform = receipt.style.transform || '';
@@ -247,5 +265,18 @@ if (window.matchMedia) {
 
 window.addEventListener('beforeprint', () => preparePrintScale());
 window.addEventListener('afterprint', () => restorePrintScale());
+</script>
+<script>
+// Thermal print button: apply condensed styles then print
+document.getElementById('print-thermal')?.addEventListener('click', () => {
+    document.body.classList.add('thermal-print');
+    // allow styles to apply before measuring and printing
+    setTimeout(() => window.print(), 120);
+});
+
+// Remove thermal class after printing
+window.addEventListener('afterprint', () => {
+    document.body.classList.remove('thermal-print');
+});
 </script>
 {% endblock %}
