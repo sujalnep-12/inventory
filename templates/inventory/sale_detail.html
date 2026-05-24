@@ -203,44 +203,61 @@ function mmToPx(mm, dpi) {
 }
 
     function preparePrintScale() {
-    const receipt = document.getElementById('receipt-print');
-    if (!receipt) return;
+        const receipt = document.getElementById('receipt-print');
+        if (!receipt) return;
 
-    // Desired physical size in mm
-    const targetWidthMm = 105;
-    const targetHeightMm = 148.5;
+        // Desired physical size in mm
+        const targetWidthMm = 105;
+        const targetHeightMm = 148.5;
 
-    const dpi = measureCssDpi();
+        const dpi = measureCssDpi();
 
-    // target size in CSS pixels at detected DPI
-    const targetPxW = mmToPx(targetWidthMm, dpi);
-    const targetPxH = mmToPx(targetHeightMm, dpi);
+        // target size in CSS pixels at detected DPI
+        const targetPxW = mmToPx(targetWidthMm, dpi);
+        const targetPxH = mmToPx(targetHeightMm, dpi);
 
-    // measured content size
-    const contentW = receipt.scrollWidth;
-    const contentH = receipt.scrollHeight;
+        // measured content size (untransformed)
+        const contentW = receipt.scrollWidth || receipt.offsetWidth;
+        const contentH = receipt.scrollHeight || receipt.offsetHeight;
 
-    // compute scale to fit both width and height
-    const scaleW = targetPxW / contentW;
-    const scaleH = targetPxH / contentH;
-    // Apply a small safety multiplier to ensure content doesn't spill to a second page
-    const rawScale = Math.min(scaleW, scaleH, 1);
-    const safetyMultiplier = 0.96;
-    const scale = rawScale * safetyMultiplier;
+        // compute initial scale to fit both width and height
+        const scaleW = targetPxW / contentW;
+        const scaleH = targetPxH / contentH;
+        let scale = Math.min(scaleW, scaleH, 1);
 
-    // store original styles to restore later
-    receipt.dataset._origTransform = receipt.style.transform || '';
-    receipt.dataset._origTransformOrigin = receipt.style.transformOrigin || '';
-    receipt.style.transformOrigin = 'top left';
-    receipt.style.transform = `scale(${scale})`;
+        // store original styles to restore later
+        receipt.dataset._origTransform = receipt.style.transform || '';
+        receipt.dataset._origTransformOrigin = receipt.style.transformOrigin || '';
+        receipt.style.transformOrigin = 'top left';
 
-    // adjust page margins visually by reducing padding if scaled
-    receipt.dataset._origPadding = receipt.style.padding || '';
-    // keep overflow hidden for print
-    receipt.style.overflow = 'hidden';
+        // Iteratively reduce scale slightly until content fits within target height
+        // This guards against browser header/footer margins and rounding differences
+        const MIN_SCALE = 0.5;
+        let attempts = 0;
+        while (attempts < 8) {
+            receipt.style.transform = `scale(${scale})`;
+            // get bounding box after transform
+            const rect = receipt.getBoundingClientRect();
+            const scaledH = rect.height;
+            const scaledW = rect.width;
+            // If content fits within target page pixels, break
+            if (scaledW <= targetPxW + 1 && scaledH <= targetPxH + 1) {
+                break;
+            }
+            // Otherwise reduce scale a bit and retry
+            scale = scale * 0.94;
+            if (scale < MIN_SCALE) { scale = MIN_SCALE; break; }
+            attempts += 1;
+        }
 
-    return scale;
-}
+        // keep overflow hidden for print
+        receipt.dataset._origPadding = receipt.style.padding || '';
+        receipt.style.overflow = 'hidden';
+
+        // ensure final transform applied
+        receipt.style.transform = `scale(${scale})`;
+        return scale;
+    }
 
 function restorePrintScale() {
     const receipt = document.getElementById('receipt-print');
